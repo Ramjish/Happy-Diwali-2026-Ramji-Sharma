@@ -1,95 +1,112 @@
-// Personalised Diwali greeting
-const nameInput = document.getElementById("nameInput");
-const wishBtn = document.getElementById("wishBtn");
-const fromLine = document.getElementById("fromLine");
-const shareBtn = document.getElementById("shareBtn");
-const surpriseBtn = document.getElementById("surpriseBtn");
-
-function greetingText() {
-  const name = nameInput.value.trim();
-  return `${name ? `Dear ${name}, ` : ""}Wishing you and your family a very Happy Diwali 2026! May the festival of lights fill your life with happiness, peace, good health, prosperity and endless beautiful moments. Let your dreams shine bright. 🪔✨`;
-}
-
-wishBtn.addEventListener("click", () => {
-  const name = nameInput.value.trim();
-  fromLine.textContent = name ? `A special Diwali wish, with love for ${name} ✨` : "With warm wishes, from your loved ones";
-  document.querySelector(".hero-copy").textContent = name
-    ? `Dear ${name}, may every diya light up a new hope and every moment bring you closer to happiness.`
-    : "May the divine lights of Diwali bring endless joy, peace, prosperity and beautiful new beginnings into your life.";
-});
-
-shareBtn.addEventListener("click", () => {
-  const url = `https://wa.me/?text=${encodeURIComponent(greetingText())}`;
-  window.open(url, "_blank", "noopener,noreferrer");
-});
-
-// Fireworks canvas
+// Diwali fireworks animation and WhatsApp sharing — Vanilla JavaScript
 const canvas = document.getElementById("fireworks");
 const ctx = canvas.getContext("2d");
-let width, height, particles = [];
-function resize() {
+let width = 0, height = 0, particles = [];
+
+function resizeCanvas() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  width = window.innerWidth; height = window.innerHeight;
-  canvas.width = width * dpr; canvas.height = height * dpr;
+  width = window.innerWidth;
+  height = window.innerHeight;
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
-window.addEventListener("resize", resize); resize();
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
 
-function burst(x = Math.random() * width, y = Math.random() * height * .55) {
+function createFirework(x = Math.random() * width, y = Math.random() * height * 0.55) {
   const colors = ["#ffd778", "#ff8d69", "#f9d6ff", "#9ee7dc", "#ffffff"];
   const color = colors[Math.floor(Math.random() * colors.length)];
-  for (let i = 0; i < 48; i++) {
-    const angle = Math.PI * 2 * i / 48;
-    const speed = 1 + Math.random() * 3.2;
-    particles.push({x, y, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed, life: 55+Math.random()*25, max: 80, color, size: 1+Math.random()*1.7});
+  for (let i = 0; i < 52; i++) {
+    const angle = (Math.PI * 2 * i) / 52;
+    const speed = 1 + Math.random() * 3.4;
+    particles.push({
+      x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+      life: 65 + Math.random() * 20, maxLife: 85,
+      color, size: 1 + Math.random() * 1.7
+    });
   }
 }
-let tick = 0;
-function animate() {
+
+let frame = 0;
+function animateFireworks() {
   ctx.clearRect(0, 0, width, height);
   particles = particles.filter(p => p.life > 0);
   for (const p of particles) {
-    p.x += p.vx; p.y += p.vy; p.vy += .025; p.vx *= .99; p.life--;
-    ctx.globalAlpha = Math.max(0, p.life / p.max);
-    ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.025;
+    p.vx *= 0.99;
+    p.life--;
+    ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
   }
   ctx.globalAlpha = 1;
-  if (++tick % 95 === 0 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) burst();
-  requestAnimationFrame(animate);
+  if (++frame % 100 === 0 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    createFirework();
+  }
+  requestAnimationFrame(animateFireworks);
 }
-animate();
+animateFireworks();
 
-surpriseBtn.addEventListener("click", () => {
-  for (let i = 0; i < 5; i++) {
-    setTimeout(() => burst(width * (.18 + Math.random() * .64), height * (.15 + Math.random() * .38)), i * 180);
+document.getElementById("celebrateButton").addEventListener("click", () => {
+  for (let i = 0; i < 6; i++) {
+    setTimeout(() => {
+      createFirework(width * (0.12 + Math.random() * 0.76), height * (0.12 + Math.random() * 0.42));
+    }, i * 170);
   }
 });
 
-// A gentle, synthesized festive chime (no external audio file required)
-let audioContext = null;
-let soundTimer = null;
-let soundOn = false;
-const soundBtn = document.getElementById("soundBtn");
-function chime() {
-  if (!audioContext || !soundOn) return;
-  const now = audioContext.currentTime;
-  [523.25, 659.25, 783.99].forEach((freq, index) => {
-    const osc = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    osc.type = "sine"; osc.frequency.value = freq;
-    gain.gain.setValueAtTime(.0001, now + index * .16);
-    gain.gain.exponentialRampToValueAtTime(.045, now + index * .16 + .025);
-    gain.gain.exponentialRampToValueAtTime(.0001, now + index * .16 + .7);
-    osc.connect(gain); gain.connect(audioContext.destination);
-    osc.start(now + index * .16); osc.stop(now + index * .16 + .75);
+document.getElementById("shareButton").addEventListener("click", () => {
+  const message = "🪔✨ Happy Diwali 2026! ✨🪔\n\nआप सभी को दीपावली की हार्दिक शुभकामनाएँ!\n\nMay this Diwali bring happiness, good health, peace, prosperity and endless success to you and your family.\n\nWith warm wishes,\nRamji Sharma";
+  const whatsappUrl = "https://wa.me/?text=" + encodeURIComponent(message);
+  window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+});
+
+// Gentle synthesized chime; audio starts only after the visitor presses the button.
+let audioContext;
+let soundInterval;
+let isSoundOn = false;
+const soundButton = document.getElementById("soundButton");
+
+function playChime() {
+  if (!audioContext || !isSoundOn) return;
+  const start = audioContext.currentTime;
+  [523.25, 659.25, 783.99].forEach((frequency, index) => {
+    const oscillator = audioContext.createOscillator();
+    const volume = audioContext.createGain();
+    const time = start + index * 0.16;
+    oscillator.type = "sine";
+    oscillator.frequency.value = frequency;
+    volume.gain.setValueAtTime(0.0001, time);
+    volume.gain.exponentialRampToValueAtTime(0.04, time + 0.03);
+    volume.gain.exponentialRampToValueAtTime(0.0001, time + 0.7);
+    oscillator.connect(volume);
+    volume.connect(audioContext.destination);
+    oscillator.start(time);
+    oscillator.stop(time + 0.75);
   });
 }
-soundBtn.addEventListener("click", async () => {
-  if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+soundButton.addEventListener("click", async () => {
+  if (!audioContext) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) {
+      soundButton.textContent = "Audio not supported";
+      return;
+    }
+    audioContext = new AudioContextClass();
+  }
   if (audioContext.state === "suspended") await audioContext.resume();
-  soundOn = !soundOn;
-  soundBtn.setAttribute("aria-pressed", String(soundOn));
-  soundBtn.innerHTML = soundOn ? "♫ <span>Sound is on · Turn off</span>" : "♫ <span>Play festive sound</span>";
-  if (soundTimer) clearInterval(soundTimer);
-  if (soundOn) { chime(); soundTimer = setInterval(chime, 2600); }
+  isSoundOn = !isSoundOn;
+  soundButton.setAttribute("aria-pressed", String(isSoundOn));
+  soundButton.innerHTML = isSoundOn ? "♫ <span>Sound is on · Turn off</span>" : "♫ <span>Play festive sound</span>";
+  clearInterval(soundInterval);
+  if (isSoundOn) {
+    playChime();
+    soundInterval = setInterval(playChime, 2800);
+  }
 });
